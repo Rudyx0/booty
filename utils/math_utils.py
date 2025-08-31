@@ -327,3 +327,31 @@ class MathUtils:
             '78.6%': high - 0.786 * diff,
             '100%': low
         }
+import math
+import logging
+
+class MathUtils:
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+    
+    def calculate_percentage_change(self, old_value: float, new_value: float) -> float:
+        """Calculate percentage change between two values"""
+        if old_value == 0:
+            return 0.0
+        return ((new_value - old_value) / old_value) * 100
+    
+    def calculate_compound_interest(self, principal: float, rate: float, time: float) -> float:
+        """Calculate compound interest"""
+        return principal * math.pow(1 + rate, time)
+    
+    def kelly_criterion(self, win_rate: float, avg_win: float, avg_loss: float) -> float:
+        """Calculate Kelly Criterion for position sizing"""
+        if avg_loss <= 0 or win_rate <= 0:
+            return 0.0
+        
+        b = avg_win / avg_loss
+        p = win_rate
+        q = 1 - win_rate
+        
+        kelly_fraction = (b * p - q) / b
+        return max(0.0, min(kelly_fraction, 0.25))  # Cap at 25%

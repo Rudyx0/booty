@@ -1,0 +1,144 @@
+# Solana Arbitrage Bot Configuration
+
+[network]
+rpc_url = "https://mainnet.helius-rpc.com/?api-key=08cff61a-4d10-4a32-8a80-b4db7240f0a9&rebate-address=8cWpp73RycAAC49a7M5A9SMgBFH1AMYt4Yg1WyNm6Pcz"
+ws_url = "wss://mainnet.helius-rpc.com/?api-key=08cff61a-4d10-4a32-8a80-b4db7240f0a9"
+commitment = "confirmed"
+timeout_ms = 30000
+max_retries = 3
+rate_limit_per_second = 1  # Much slower for free tier
+request_batch_size = 1    # Single requests only
+cache_duration_seconds = 600  # Cache for 10 minutes to reduce requests
+# Working mainnet backup endpoints
+backup_rpc_urls = [
+    "https://mainnet.helius-rpc.com/?api-key=08cff61a-4d10-4a32-8a80-b4db7240f0a9",
+    "https://solana-mainnet.g.alchemy.com/v2/demo",
+    "https://api.mainnet-beta.solana.com"
+]
+
+[trading]
+wallet_keypair_path = "/home/nox/Bot/production_wallet.json"
+initial_capital = 0.56  # Starting with 0.56 SOL
+max_position_size = 0.10  # Conservative 10% max position for 0.56 SOL
+scan_interval_ms = 2000   # Slower scanning to avoid rate limits
+dynamic_scan_interval = true  # Enable dynamic wait time adjustment
+min_scan_interval_ms = 100    # Minimum 100ms for ultra-fast scanning
+max_scan_interval_ms = 500    # Maximum 500ms if RPC issues
+post_trade_cooldown_ms = 2000 # 2s cooldown after executing a trade
+rpc_error_backoff_ms = 1000   # 1s backoff on RPC errors
+max_concurrent_trades = 1  # Only 1 trade at a time with small capital
+gas_price_multiplier = 3.5  # Higher gas for better execution
+slippage_tolerance = 0.008  # Tighter slippage control
+min_profit_usd = 0.05  # Minimum $0.05 profit per trade - filters out spam trades
+auto_execute_threshold = 0.80  # Lowered to capture real opportunities
+min_trade_size_sol = 0.05  # Minimum 0.05 SOL per trade (~$10)
+max_trade_size_sol = 0.1  # Maximum 0.1 SOL per trade (~$20)
+min_profit_threshold_usd = 0.02  # Lowered to capture $0.024 opportunities we saw
+max_opportunities_per_scan = 20  # Scan more opportunities per cycle
+withdrawal_threshold_usd = 235.0  # USD equivalent of withdrawal_threshold
+flash_loan_threshold_usd = 500.0  # $500 threshold for flash loan activation
+dry_run_mode = false  # LIVE TRADING MODE - READY FOR DEPLOYMENT
+trade_size_pct_of_wallet = 0.10  # Max 10% of wallet per trade
+max_pct_of_pool = 0.001  # Max 0.1% of pool liquidity per trade
+
+[risk]
+max_drawdown = 0.05  # 5% max drawdown for small capital
+max_daily_loss = 0.03  # 3% daily loss limit (very conservative)
+cooldown_after_loss_minutes = 30  # Longer cooldown for small capital
+max_consecutive_failures = 3  # Stop after 3 failures with small capital
+emergency_stop_loss = 0.08  # 8% emergency stop (tighter)
+position_size_limit = 0.10  # Match max_position_size
+blacklist_duration_minutes = 60  # Longer blacklist for safety
+safety_threshold = 0.1  # Minimum 0.1 SOL safety threshold
+profit_target_daily = 0.10  # Conservative 10% daily target
+take_profit_threshold = 0.05  # Take profits at 5% gains
+min_wallet_balance_sol = 0.1  # Never go below 0.1 SOL
+max_trade_value_sol = 0.056  # Max 10% of 0.56 SOL per trade
+circuit_breaker_enabled = true  # Enable circuit breakers
+max_trades_per_hour = 10  # Limit trading frequency
+
+[optimization]
+max_iterations = 150  # Higher for better profit optimization
+tolerance = 0.000005  # Ultra-tight tolerance for maximum accuracy
+min_trade_size = 100   # Minimum trade size in lamports (0.0001 SOL)
+max_trade_size = 10000000000  # Maximum trade size in lamports (10 SOL)
+speed_mode = "ultra_fast"  # Maximum speed optimization
+dynamic_profit_threshold = true  # Adjust profit threshold based on fees
+min_dynamic_profit_usd = 0.05  # Absolute minimum profit (matches min_profit_threshold)
+max_dynamic_profit_usd = 0.20  # Maximum adjusted profit threshold
+parallel_scanning = true  # Scan multiple tokens simultaneously
+max_parallel_scans = 50  # Maximum concurrent scans
+scan_all_pairs = true  # Scan all available trading pairs
+profit_optimization = true  # Enable advanced profit optimization
+dynamic_sizing = true  # Adjust trade sizes based on market conditions
+
+[monitoring]
+enable_metrics = true
+prometheus_port = 9090
+log_level = "info"
+
+[profit_extraction]
+enabled = true
+daily_target_usd = 0.4  # Withdraw 0.4 SOL every 12h (~$82 at current prices)
+withdrawal_interval_hours = 12  # Twice daily for faster compounding
+strategy = "core_bankroll_protected"  # Protect core bankroll, withdraw only from profits
+profit_percentage = 0.1  # 10% for percentage-based strategy (not used for fixed amount)
+core_bankroll_sol = 1.5  # Never drop below 1.5 SOL - this is the protected trading capital
+minimum_bankroll_usd = 0.15  # Emergency safety net (below core bankroll)
+target_wallet = "8cWpp73RycAAC49a7M5A9SMgBFH1AMYt4Yg1WyNm6Pcz"  # Your Solana wallet address
+withdrawal_threshold = 1.9  # Start withdrawals when total balance reaches 1.9 SOL (1.5 core + 0.4 profit)
+profit_pool_only = true  # Only withdraw from profits above core bankroll
+compounding_complete_threshold = 999.0  # Never stop compounding - always grow
+auto_reinvest = true  # Automatically reinvest remaining profits above withdrawal amount
+
+[telegram]
+enabled = true
+bot_token = "8271221982:AAF-zWWU1EDagukddw2fBWR1SRKroYOFYlQ"  # Your Telegram bot token
+chat_id = "7266370161"  # Your private chat ID
+
+performance_update_interval_hours = 1  # More frequent updates
+send_withdrawal_notifications = true
+send_performance_updates = true
+send_alerts = true
+send_daily_summaries = true
+send_trade_notifications = true  # Real-time trade alerts
+send_milestone_notifications = true  # Milestone achievements
+send_flash_loan_notifications = true  # Flash loan executions
+send_mev_protection_alerts = true    # MEV protection status
+
+[dexes.raydium]
+enabled = true
+program_id = "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
+fee_rate = 0.0025
+min_liquidity = 5000  # Lower threshold for more opportunities
+priority = 1  # Highest priority DEX
+
+[dexes.orca]
+enabled = true
+program_id = "9W959DqEETiGZocYWCQPaJ6sBmUzgfxXfqGeTEdp3aQP"
+fee_rate = 0.003
+min_liquidity = 5000
+priority = 2  # Second priority DEX
+
+[dexes.serum]
+enabled = true  # Re-enable with optimized fetching
+program_id = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+fee_rate = 0.0022
+min_liquidity = 8000
+priority = 3
+
+[dexes.jupiter]
+enabled = true  # Fixed API parsing
+program_id = "JUP4Fb2cqiRUcaTHdrPC8h2gNsA2ETXiPDD33WcGuJB"
+fee_rate = 0.001
+min_liquidity = 10000
+priority = 4
+ultra_api_key = "0b3654fd-fa8c-4f44-bafc-2f80e0f16aee"  # Jupiter Ultra API key
+ultra_rate_limit = 5  # Starting limit: 5 RPS
+
+[dexes.saber]
+enabled = true  # Re-enabled for more pool support opportunities
+program_id = "SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ"
+fee_rate = 0.0025
+min_liquidity = 3000  # Lower threshold for meme coins
+priority = 5

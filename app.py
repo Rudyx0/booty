@@ -40,30 +40,44 @@ if 'performance_metrics' not in st.session_state:
         'scam_tokens_blocked': 0
     }
 
-def run_bot_async():
+def run_bot_async(bot_instance):
     """Run the bot in a separate thread"""
-    if st.session_state.bot and not st.session_state.bot_running:
-        st.session_state.bot_running = True
-        try:
-            # Run the bot's main loop
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(st.session_state.bot.run())
-        except Exception as e:
-            st.error(f"Bot encountered an error: {str(e)}")
-        finally:
-            st.session_state.bot_running = False
+    try:
+        # Run the bot's main loop
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(bot_instance.run())
+    except Exception as e:
+        print(f"Bot encountered an error: {str(e)}")
+    finally:
+        # Set a flag that can be checked by the main thread
+        if hasattr(bot_instance, 'running'):
+            bot_instance.running = False
 
 def main():
     st.title("🚀 Ultra-Fast Solana Arbitrage Bot")
     st.markdown("---")
+    
+    # Check for required configuration
+    try:
+        config = load_config()
+        if not os.path.exists('data/wallet_keypair.json'):
+            st.error("❌ Wallet keypair file not found. Please create 'data/wallet_keypair.json'")
+            st.stop()
+    except Exception as e:
+        st.error(f"❌ Configuration error: {str(e)}")
+        st.stop()
     
     # Sidebar configuration
     with st.sidebar:
         st.header("🎛️ Bot Controls")
         
         # Bot status
-        if st.session_state.bot_running:
+        bot_is_running = (st.session_state.bot_running and 
+                         st.session_state.bot and 
+                         getattr(st.session_state.bot, 'running', False))
+        
+        if bot_is_running:
             st.success("🟢 Bot is RUNNING")
             if st.button("🛑 Stop Bot", type="secondary"):
                 if st.session_state.bot:
@@ -76,14 +90,16 @@ def main():
                 try:
                     config = load_config()
                     st.session_state.bot = ArbitrageBot(config)
+                    st.session_state.bot_running = True
                     # Start bot in background thread
-                    bot_thread = threading.Thread(target=run_bot_async, daemon=True)
+                    bot_thread = threading.Thread(target=run_bot_async, args=(st.session_state.bot,), daemon=True)
                     bot_thread.start()
                     st.success("Bot starting...")
                     time.sleep(2)
                     st.rerun()
                 except Exception as e:
                     st.error(f"Failed to start bot: {str(e)}")
+                    st.session_state.bot_running = False
         
         st.markdown("---")
         
@@ -176,13 +192,13 @@ def main():
                 'Status': ['Stopped']
             })
         
-        st.dataframe(opportunities_df, use_container_width=True)
+        st.dataframe(opportunities_df, width='stretch')
         
         # Recent trades
         st.subheader("📋 Recent Trades")
         if st.session_state.trades_history:
             trades_df = pd.DataFrame(st.session_state.trades_history[-10:])  # Last 10 trades
-            st.dataframe(trades_df, use_container_width=True)
+            st.dataframe(trades_df, width='stretch')
         else:
             st.info("No trades executed yet. Bot will display trade history here.")
     
@@ -195,7 +211,7 @@ def main():
             st.subheader("Recently Discovered Tokens")
             if st.session_state.discovered_tokens:
                 tokens_df = pd.DataFrame(st.session_state.discovered_tokens[-20:])
-                st.dataframe(tokens_df, use_container_width=True)
+                st.dataframe(tokens_df, width='stretch')
             else:
                 st.info("Token scanner will display discovered tokens here.")
         
@@ -218,7 +234,7 @@ def main():
         fig = go.Figure()
         
         # Sample data for visualization
-        dates = pd.date_range(start=datetime.now() - timedelta(days=7), end=datetime.now(), freq='H')
+        dates = pd.date_range(start=datetime.now() - timedelta(days=7), end=datetime.now(), freq='h')
         cumulative_profit = [0.0] * len(dates)
         
         if st.session_state.trades_history:
@@ -244,7 +260,7 @@ def main():
             height=400
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         
         # Additional metrics
         col1, col2 = st.columns(2)
@@ -317,9 +333,24 @@ def main():
             st.error(f"Telegram config error: {str(e)}")
     
     # Auto-refresh every 5 seconds when bot is running
-    if st.session_state.bot_running:
-        time.sleep(5)
-        st.rerun()
+    bot_is_running = (st.session_state.bot_running and 
+                     st.session_state.bot and 
+                     getattr(st.session_state.bot, 'running', False))
+    
+    if bot_is_running:
+        # Use placeholder for auto-refresh to prevent blocking
+        placeholder = st.empty()
+        with placeholder.container():
+            if st.button("🔄 Refresh", key="auto_refresh"):
+                st.rerun()
+        
+        # Auto-refresh timer (non-blocking)
+        if 'last_refresh' not in st.session_state:
+            st.session_state.last_refresh = time.time()
+        
+        if time.time() - st.session_state.last_refresh > 5:
+            st.session_state.last_refresh = time.time()
+            st.rerun()
 
 if __name__ == "__main__":
     main()

@@ -410,3 +410,33 @@ class SolanaUtils:
         except Exception as e:
             self.logger.error(f"Failed to get cluster nodes: {str(e)}")
             return []
+import asyncio
+import logging
+from solana.rpc.async_api import AsyncClient
+from solders.pubkey import Pubkey
+
+class SolanaUtils:
+    def __init__(self, client: AsyncClient, config):
+        self.client = client
+        self.config = config
+        self.logger = logging.getLogger(__name__)
+    
+    async def get_wallet_balance(self, wallet_pubkey: Pubkey) -> float:
+        """Get wallet balance in SOL"""
+        try:
+            response = await self.client.get_balance(wallet_pubkey)
+            if response.value:
+                return response.value / 1e9  # Convert lamports to SOL
+            return 0.0
+        except Exception as e:
+            self.logger.error(f"Failed to get wallet balance: {str(e)}")
+            return 0.0
+    
+    async def get_token_accounts(self, wallet_pubkey: Pubkey):
+        """Get all token accounts for wallet"""
+        try:
+            response = await self.client.get_token_accounts_by_owner(wallet_pubkey)
+            return response.value if response.value else []
+        except Exception as e:
+            self.logger.error(f"Failed to get token accounts: {str(e)}")
+            return []

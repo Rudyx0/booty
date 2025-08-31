@@ -153,35 +153,64 @@ class ArbitrageBot:
             
     async def main_arbitrage_loop(self):
         """Main arbitrage scanning and execution loop"""
+        self.logger.info("🚀 Starting main arbitrage scanning loop...")
+        scan_count = 0
         while self.running and not self.emergency_stopped:
             try:
+                scan_count += 1
+                
+                # Add immediate scan confirmation
+                if scan_count == 1 or scan_count % 3 == 0:
+                    self.logger.info(f"⚡ Scan #{scan_count} starting...")
+                
                 # Rate limiting check
                 if not await self.check_rate_limit():
+                    self.logger.info(f"⏳ Rate limited, waiting...")
                     await asyncio.sleep(0.1)
                     continue
                 
                 # Get wallet balance
                 wallet_balance = await self.solana_utils.get_wallet_balance(self.wallet.pubkey())
                 
+                # Log wallet balance every few scans
+                if scan_count % 5 == 0:
+                    self.logger.info(f"💰 Wallet balance: {wallet_balance:.3f} SOL")
+                
                 # Risk checks
-                if not self.risk_manager.can_trade(wallet_balance, self.total_profit):
+                can_trade = self.risk_manager.can_trade(wallet_balance, self.total_profit)
+                if not can_trade:
+                    if scan_count % 10 == 0:  # Only log occasionally to avoid spam
+                        self.logger.info(f"🚫 Risk manager blocking trades - wallet: {wallet_balance:.3f} SOL")
                     await asyncio.sleep(self.config.trading.scan_interval_ms / 1000)
                     continue
+                
+                # Log scanning activity every 5 scans to show it's working
+                if scan_count % 5 == 0:
+                    active_tokens = await self.token_scanner.get_active_tokens()
+                    self.logger.info(f"🔍 Scan #{scan_count}: Checking {len(active_tokens)} tokens for arbitrage opportunities...")
                 
                 # Scan for opportunities
                 opportunities = await self.scan_arbitrage_opportunities()
                 
                 if opportunities:
                     self.opportunities_found += len(opportunities)
+                    self.logger.info(f"Found {len(opportunities)} opportunities!")
                     
                     # Execute best opportunity
                     best_opportunity = max(opportunities, key=lambda x: x.profit_usd)
+                    self.logger.info(f"Best opportunity: {best_opportunity.token_symbol} - ${best_opportunity.profit_usd:.4f}")
                     
                     if await self.validate_opportunity(best_opportunity):
                         await self.execute_arbitrage(best_opportunity)
+                    else:
+                        self.logger.info("Opportunity validation failed")
+                else:
+                    # Log no opportunities found every 10 scans to show it's actively scanning
+                    if scan_count % 10 == 0:
+                        self.logger.info(f"💤 Scan #{scan_count}: No profitable opportunities found (min profit: ${self.config.trading.min_profit_usd})")
                 
-                # Dynamic sleep based on performance
-                sleep_time = self.calculate_dynamic_sleep()
+                # Reduced sleep time for faster scanning
+                sleep_time = max(500, self.config.trading.scan_interval_ms // 2)  # At least 500ms
                 await asyncio.sleep(sleep_time / 1000)
                 
             except Exception as e:
@@ -197,22 +226,28 @@ class ArbitrageBot:
             active_tokens = await self.token_scanner.get_active_tokens()
             
             if not active_tokens:
+                self.logger.debug("No active tokens found to scan")
                 return opportunities
+            
+            self.logger.debug(f"Scanning {len(active_tokens)} active tokens")
             
             # Scan opportunities in parallel for speed
             tasks = []
-            for token in active_tokens[:self.config.optimization.max_parallel_scans]:
+            scan_limit = min(len(active_tokens), self.config.optimization.max_parallel_scans)
+            for token in active_tokens[:scan_limit]:
                 task = asyncio.create_task(self.scan_token_opportunities(token))
                 tasks.append(task)
             
             # Gather results
             results = await asyncio.gather(*tasks, return_exceptions=True)
             
-            for result in results:
+            for i, result in enumerate(results):
                 if isinstance(result, list):
                     opportunities.extend(result)
+                    if result:  # If opportunities found for this token
+                        self.logger.debug(f"Token {active_tokens[i][:8]}... found {len(result)} opportunities")
                 elif isinstance(result, Exception):
-                    self.logger.warning(f"Scan error: {str(result)}")
+                    self.logger.warning(f"Scan error for token {active_tokens[i][:8]}...: {str(result)}")
                     
         except Exception as e:
             self.logger.error(f"Opportunity scanning error: {str(e)}")
@@ -230,6 +265,14 @@ class ArbitrageBot:
             
             # Get prices from all DEXs
             dex_prices = await self.dex_manager.get_token_prices(token_address)
+            
+            # Debug logging for price data
+            if dex_prices:
+                self.logger.debug(f"Token {token_address[:8]}: Got {len(dex_prices)} prices from DEXs: {list(dex_prices.keys())}")
+                for dex, price_data in dex_prices.items():
+                    self.logger.debug(f"  {dex}: ${price_data.get('price', 0):.6f}, liquidity: ${price_data.get('liquidity', 0):,.0f}")
+            else:
+                self.logger.debug(f"Token {token_address[:8]}: No price data from any DEX")
             
             if len(dex_prices) < 2:
                 return opportunities
@@ -654,7 +697,7 @@ class ArbitrageBot:
             self.last_withdrawal_check = current_time
             
             # Get real-time wallet balance
-            actual_balance = await self.solana_utils.get_wallet_balance(self.wallet.public_key)
+            actual_balance = await self.solana_utils.get_wallet_balance(self.wallet.pubkey())
             self.current_balance = actual_balance
             
             # Phase 1: Compound from 0.53 SOL to 1.9 SOL

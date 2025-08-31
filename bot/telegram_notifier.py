@@ -399,3 +399,50 @@ class TelegramNotifier:
         except Exception as e:
             self.logger.error(f"Telegram connection test failed: {str(e)}")
             return False
+import asyncio
+import aiohttp
+import logging
+from datetime import datetime
+
+class TelegramNotifier:
+    def __init__(self, config):
+        self.config = config
+        self.logger = logging.getLogger(__name__)
+        self.enabled = config.telegram.enabled
+        self.bot_token = config.telegram.bot_token
+        self.chat_id = config.telegram.chat_id
+    
+    async def send_message(self, message: str):
+        """Send message to Telegram"""
+        if not self.enabled or not self.bot_token or not self.chat_id:
+            return
+        
+        try:
+            url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
+            payload = {
+                'chat_id': self.chat_id,
+                'text': message,
+                'parse_mode': 'HTML'
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, json=payload) as response:
+                    if response.status != 200:
+                        self.logger.error(f"Telegram API error: {response.status}")
+        except Exception as e:
+            self.logger.error(f"Failed to send Telegram message: {str(e)}")
+    
+    async def send_trade_notification(self, opportunity, profit: float, execution_time: float):
+        """Send trade notification"""
+        if not self.config.telegram.send_trade_notifications:
+            return
+        
+        message = (
+            f"💰 <b>Trade Executed!</b>\n"
+            f"🪙 Token: {opportunity.token_symbol}\n"
+            f"💵 Profit: ${profit:.2f}\n"
+            f"⏱️ Time: {execution_time:.2f}s\n"
+            f"📈 {opportunity.buy_dex} → {opportunity.sell_dex}"
+        )
+        
+        await self.send_message(message)

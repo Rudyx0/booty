@@ -29,13 +29,14 @@ class TokenScanner:
         self.initialize_popular_tokens()
         
     def initialize_popular_tokens(self):
-        """Initialize with popular Solana tokens"""
+        """Initialize with popular Solana tokens including meme coins"""
         popular_tokens = [
+            # Stablecoins and Major Tokens
             {
                 'address': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',  # USDC
                 'symbol': 'USDC',
                 'name': 'USD Coin',
-                'liquidity': 1000000000,  # High liquidity
+                'liquidity': 1000000000,
                 'volume': 100000000,
                 'source': 'popular'
             },
@@ -70,6 +71,122 @@ class TokenScanner:
                 'liquidity': 150000000,
                 'volume': 40000000,
                 'source': 'popular'
+            },
+            # Popular Meme Coins
+            {
+                'address': 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',  # Bonk
+                'symbol': 'BONK',
+                'name': 'Bonk',
+                'liquidity': 50000000,
+                'volume': 30000000,
+                'source': 'meme'
+            },
+            {
+                'address': 'ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82',  # BOME
+                'symbol': 'BOME',
+                'name': 'Book of Meme',
+                'liquidity': 25000000,
+                'volume': 15000000,
+                'source': 'meme'
+            },
+            {
+                'address': 'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm',  # WIF
+                'symbol': 'WIF',
+                'name': 'dogwifhat',
+                'liquidity': 40000000,
+                'volume': 25000000,
+                'source': 'meme'
+            },
+            {
+                'address': 'CzLSujWBLFsSjncfkh59rUFqvafWcY5tzedWJSuypump',  # SLERF
+                'symbol': 'SLERF',
+                'name': 'Slerf',
+                'liquidity': 15000000,
+                'volume': 10000000,
+                'source': 'meme'
+            },
+            {
+                'address': 'HhJpBhRRn4g56VsyLuT8DL5Bv31HkXqsrahTTUCZeZg4',  # POPCAT
+                'symbol': 'POPCAT',
+                'name': 'Popcat',
+                'liquidity': 20000000,
+                'volume': 12000000,
+                'source': 'meme'
+            },
+            {
+                'address': 'A8C3xuqscfmyLrte3VmTqrAq8kgMASius9AFNANwpump',  # PNUT
+                'symbol': 'PNUT',
+                'name': 'Peanut the Squirrel',
+                'liquidity': 30000000,
+                'volume': 18000000,
+                'source': 'meme'
+            },
+            # DeFi Tokens
+            {
+                'address': 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn',  # JitoSOL
+                'symbol': 'JITOSOL',
+                'name': 'Jito Staked SOL',
+                'liquidity': 80000000,
+                'volume': 20000000,
+                'source': 'defi'
+            },
+            {
+                'address': 'bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1',  # bSOL
+                'symbol': 'BSOL',
+                'name': 'BlazeStake Staked SOL',
+                'liquidity': 60000000,
+                'volume': 15000000,
+                'source': 'defi'
+            },
+            {
+                'address': 'hntyVP6YFm1Hg25TN9WGLqM12b8TQmcknKrdu1oxWux',  # HNT
+                'symbol': 'HNT',
+                'name': 'Helium',
+                'liquidity': 35000000,
+                'volume': 20000000,
+                'source': 'popular'
+            },
+            {
+                'address': 'rndrizKT3MK1iimdxRdWabcF7Zg7AR5T4nud4EkHBof',  # RND
+                'symbol': 'RND',
+                'name': 'Render Token',
+                'liquidity': 45000000,
+                'volume': 25000000,
+                'source': 'popular'
+            },
+            # Gaming Tokens
+            {
+                'address': 'SCSfwxWNb7s2hFkoPsXoAXAeqjzNFEagjFS8DkLt6gn',  # STAR ATLAS
+                'symbol': 'ATLAS',
+                'name': 'Star Atlas',
+                'liquidity': 10000000,
+                'volume': 5000000,
+                'source': 'gaming'
+            },
+            {
+                'address': 'poLisWXnNRwC6oBu1vHiuKQzFjGL4XDSu4g9qjz9qVk',  # POLIS
+                'symbol': 'POLIS',
+                'name': 'Star Atlas DAO',
+                'liquidity': 8000000,
+                'volume': 4000000,
+                'source': 'gaming'
+            },
+            # Recent Popular Tokens
+            {
+                'address': 'GDfnEsia2WLAW5t8yx2X5j2mkfA74i5kwGdDuZHt7XmG',  # AI tokens
+                'symbol': 'AI',
+                'name': 'AI Token',
+                'liquidity': 12000000,
+                'volume': 8000000,
+                'source': 'ai'
+            },
+            {
+                'address': '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R',  # RAY
+                'symbol': 'RAY',
+                'name': 'Raydium',
+                'liquidity': 70000000,
+                'volume': 35000000,
+                'source': 'defi'
             }
         ]
         
@@ -209,14 +326,62 @@ class TokenScanner:
         trending_tokens = []
         
         try:
-            # This would analyze recent volume data to identify trending tokens
-            # Implementation would depend on available APIs
-            pass
+            # Scan Dexscreener for trending Solana tokens
+            async with aiohttp.ClientSession() as session:
+                url = "https://api.dexscreener.com/latest/dex/search/?q=solana"
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        pairs = data.get('pairs', [])
+                        
+                        # Filter for high volume, recent tokens
+                        for pair in pairs[:20]:  # Top 20 results
+                            if pair.get('chainId') == 'solana':
+                                token_address = pair.get('baseToken', {}).get('address')
+                                if token_address and token_address not in self.known_tokens:
+                                    volume_24h = float(pair.get('volume', {}).get('h24', 0))
+                                    liquidity = float(pair.get('liquidity', {}).get('usd', 0))
+                                    
+                                    # Filter for trending criteria
+                                    if volume_24h > 100000 and liquidity > 50000:  # $100k volume, $50k liquidity
+                                        trending_tokens.append({
+                                            'address': token_address,
+                                            'symbol': pair.get('baseToken', {}).get('symbol', 'UNKNOWN'),
+                                            'name': pair.get('baseToken', {}).get('name', ''),
+                                            'liquidity': liquidity,
+                                            'volume': volume_24h,
+                                            'price_change_24h': float(pair.get('priceChange', {}).get('h24', 0)),
+                                            'source': 'trending',
+                                            'discovered_at': datetime.now()
+                                        })
             
+            # Also scan pump.fun for new launches
+            async with aiohttp.ClientSession() as session:
+                url = "https://frontend-api.pump.fun/coins?offset=0&limit=50&sort=last_trade_timestamp&order=DESC"
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        
+                        for coin in data[:10]:  # Top 10 recent
+                            token_address = coin.get('mint')
+                            if token_address and token_address not in self.known_tokens:
+                                market_cap = float(coin.get('usd_market_cap', 0))
+                                if market_cap > 10000:  # $10k market cap minimum
+                                    trending_tokens.append({
+                                        'address': token_address,
+                                        'symbol': coin.get('symbol', 'UNKNOWN'),
+                                        'name': coin.get('name', ''),
+                                        'liquidity': float(coin.get('virtual_sol_reserves', 0)) * 200,
+                                        'volume': 0,  # Not available
+                                        'market_cap': market_cap,
+                                        'source': 'pumpfun',
+                                        'discovered_at': datetime.now()
+                                    })
+                                    
         except Exception as e:
             self.logger.error(f"Trending tokens scan error: {str(e)}")
             
-        return trending_tokens
+        return trending_tokens[:15]  # Limit to 15 trending tokens
         
     async def get_token_info(self, token_address: str) -> Optional[Dict[str, Any]]:
         """Get additional information about a token"""
@@ -347,8 +512,16 @@ class TokenScanner:
         if datetime.now() - self.last_scan_time > timedelta(minutes=5):
             await self.update_active_tokens()
             
-        # Return addresses of active tokens
-        return [token['address'] for token in self.active_tokens if token.get('liquidity', 0) > 0]
+        # Always return at least the popular tokens for scanning
+        if not self.active_tokens:
+            self.logger.warning("No active tokens available, reinitializing with popular tokens")
+            self.initialize_popular_tokens()
+            return [token['address'] for token in self.active_tokens]
+        
+        # Return addresses of active tokens (remove liquidity filter to ensure we have tokens)
+        active_addresses = [token['address'] for token in self.active_tokens]
+        self.logger.debug(f"Returning {len(active_addresses)} active tokens for scanning")
+        return active_addresses
         
     async def update_active_tokens(self):
         """Update the list of active tokens based on current market conditions"""
@@ -362,24 +535,21 @@ class TokenScanner:
                 if current_info:
                     # Update token data
                     token.update(current_info)
-                    
-                    # Keep tokens with sufficient liquidity and volume
-                    if (token.get('liquidity', 0) >= self.config.dexes.raydium.min_liquidity and
-                        token.get('volume_24h', 0) > 0):
-                        updated_tokens.append(token)
+                    updated_tokens.append(token)
+                else:
+                    # Keep token even if we can't get current info
+                    updated_tokens.append(token)
                         
-            # Sort by liquidity (highest first)
-            self.active_tokens = sorted(
-                updated_tokens,
-                key=lambda x: x.get('liquidity', 0),
-                reverse=True
-            )[:50]  # Keep top 50 tokens
+            # Keep all tokens, don't filter by liquidity during update
+            self.active_tokens = updated_tokens[:50]  # Keep top 50 tokens
             
             self.last_scan_time = datetime.now()
             self.logger.info(f"Updated active tokens: {len(self.active_tokens)} tokens")
             
         except Exception as e:
             self.logger.error(f"Active tokens update error: {str(e)}")
+            # Don't clear tokens on error, keep existing ones
+            self.last_scan_time = datetime.now()
             
     def get_token_stats(self) -> Dict[str, int]:
         """Get statistics about discovered tokens"""

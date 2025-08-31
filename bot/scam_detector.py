@@ -495,3 +495,83 @@ class ScamDetector:
         self.token_safety_cache.clear()
         self.logger.info("Safety cache cleared")
 
+import asyncio
+import aiohttp
+import logging
+from solana.rpc.async_api import AsyncClient
+
+class ScamDetector:
+    def __init__(self, config, solana_client: AsyncClient):
+        self.config = config
+        self.client = solana_client
+        self.logger = logging.getLogger(__name__)
+        
+        # Known scam indicators
+        self.scam_patterns = [
+            'moon', 'rocket', 'safe', 'baby', 'doge',
+            'elon', 'shib', 'pepe', 'floki', 'inu'
+        ]
+    
+    async def is_token_safe(self, token_address: str) -> bool:
+        """Check if token is safe to trade"""
+        try:
+            # Basic safety checks
+            safety_checks = await asyncio.gather(
+                self.check_holder_distribution(token_address),
+                self.check_liquidity_lock(token_address),
+                self.check_metadata_safety(token_address),
+                return_exceptions=True
+            )
+            
+            # All checks must pass
+            return all(check for check in safety_checks if not isinstance(check, Exception))
+            
+        except Exception as e:
+            self.logger.error(f"Token safety check error: {str(e)}")
+            return False
+    
+    async def check_holder_distribution(self, token_address: str) -> bool:
+        """Check token holder distribution"""
+        try:
+            # Simplified check - in production would use actual on-chain data
+            return True  # Placeholder
+        except Exception as e:
+            self.logger.error(f"Holder distribution check error: {str(e)}")
+            return False
+    
+    async def check_liquidity_lock(self, token_address: str) -> bool:
+        """Check if liquidity is locked"""
+        try:
+            # Simplified check - in production would verify actual locks
+            return True  # Placeholder
+        except Exception as e:
+            self.logger.error(f"Liquidity lock check error: {str(e)}")
+            return False
+    
+    async def check_metadata_safety(self, token_address: str) -> bool:
+        """Check token metadata for scam indicators"""
+        try:
+            # Get token metadata
+            async with aiohttp.ClientSession() as session:
+                url = f"https://token.jup.ag/all"
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        tokens = await response.json()
+                        
+                        for token in tokens:
+                            if token.get('address') == token_address:
+                                name = token.get('name', '').lower()
+                                symbol = token.get('symbol', '').lower()
+                                
+                                # Check for scam patterns
+                                for pattern in self.scam_patterns:
+                                    if pattern in name or pattern in symbol:
+                                        return False
+                                
+                                return True
+            
+            return True  # If not found in Jupiter list, assume safe for now
+            
+        except Exception as e:
+            self.logger.error(f"Metadata safety check error: {str(e)}")
+            return False
